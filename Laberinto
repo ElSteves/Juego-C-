@@ -1,0 +1,238 @@
+#include <iostream>
+#include <cstdlib>
+#include <vector>
+using namespace std;
+
+const int WIDTH = 20, HEIGHT = 10;
+unsigned char player = 'P';
+unsigned char exitSymbol = 'E';
+int posX = 1, posY = 1;
+int exitX = 18, exitY = 8;
+unsigned char action;
+string playerName;
+int score = 1000;
+
+struct PlayerScore {
+    string name;
+    int score;
+};
+
+vector<PlayerScore> scores;
+
+void showMenu();
+void startGame();
+void playerAction();
+void showCredits();
+void showScores();
+
+struct Enemy {
+    char symbol;
+    bool active;
+    int x;
+    int y;
+};
+
+Enemy enemy1 = {'X', true, 6, 3};
+Enemy enemy2 = {'Y', true, 1, 8};
+Enemy enemy3 = {'Z', true, 17, 6};
+
+unsigned char maze[HEIGHT][WIDTH] = {
+    {'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'},
+    {'#',' ',' ',' ',' ',' ',' ',' ','#','#',' ',' ',' ',' ',' ',' ','#','#',' ','#'},
+    {'#',' ','#',' ','#','#','#',' ',' ',' ',' ','#','#',' ','#',' ',' ',' ',' ','#'},
+    {'#',' ','#',' ','#',' ','#',' ','#',' ','#','#',' ',' ',' ','#',' ','#','#','#'},
+    {'#',' ',' ',' ',' ',' ',' ',' ','#',' ','#',' ',' ','#',' ','#',' ',' ',' ','#'},
+    {'#','#',' ','#',' ','#','#','#','#',' ','#',' ','#','#',' ',' ',' ','#',' ','#'},
+    {'#',' ',' ','#',' ',' ',' ',' ','#',' ','#',' ',' ',' ','#',' ','#','#',' ','#'},
+    {'#',' ','#','#','#',' ','#',' ',' ',' ','#','#','#',' ',' ',' ',' ','#',' ','#'},
+    {'#',' ',' ',' ',' ',' ','#',' ','#',' ',' ',' ',' ',' ','#','#',' ','E',' ','#'},
+    {'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'}
+};
+
+int main() {
+    showMenu();  // Mostrar el menú de inicio
+    return 0;
+}
+
+void showMenu() {
+    char choice;
+
+    do {
+        system("cls");  // Limpiar la pantalla
+        cout << "===================" << endl;
+        cout << "  Bienvenido al Juego del Laberinto  " << endl;
+        cout << "===================" << endl;
+        cout << "1. Iniciar Juego" << endl;
+        cout << "2. Puntajes" << endl;
+        cout << "3. Créditos" << endl;
+        cout << "4. Salir" << endl;
+        cout << "Selecciona una opcion: ";
+        cin >> choice;
+
+        switch (choice) {
+            case '1':
+                cout << "Ingresa tu nombre: ";
+                cin.ignore();
+                getline(cin, playerName);
+                startGame();
+                break;
+            case '2':
+                showScores();
+                break;
+            case '3':
+                showCredits();
+                break;
+            case '4':
+                cout << "Saliendo del juego..." << endl;
+                exit(0);
+            default:
+                cout << "Opción inválida, intenta de nuevo." << endl;
+                break;
+        }
+    } while (choice != '4');
+}
+
+void startGame() {
+    // Resetear la puntuación y posición del jugador
+    score = 1000;
+    posX = 1;
+    posY = 1;
+
+    // Reposiciona a los enemigos
+    enemy1 = {'X', true, 6, 3};
+    enemy2 = {'Y', true, 1, 8};
+    enemy3 = {'Z', true, 17, 6};
+
+    while (true) {
+        system("cls");
+
+        // Coloca al jugador en el laberinto
+        maze[posY][posX] = player;
+
+        // Coloca a los enemigos en el laberinto si están activos
+        if (enemy1.active) maze[enemy1.y][enemy1.x] = enemy1.symbol;
+        if (enemy2.active) maze[enemy2.y][enemy2.x] = enemy2.symbol;
+        if (enemy3.active) maze[enemy3.y][enemy3.x] = enemy3.symbol;
+
+        // Dibuja el laberinto
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                cout << maze[y][x];
+            }
+            cout << endl;
+        }
+
+        // Mostrar el nombre del jugador y la puntuación
+        cout << "Jugador: " << playerName << endl;
+        cout << "Puntuacion: " << score << endl;
+
+        // Ejecuta la acción del jugador
+        playerAction();
+
+        // Verifica si el jugador ha alcanzado la salida
+        if (posX == exitX && posY == exitY) {
+            cout << "¡Felicidades, " << playerName << "! Has encontrado la salida y ganado el juego!" << endl;
+            cout << "Puntuacion final: " << score << endl;
+
+            // Guardar la puntuación del jugador
+            scores.push_back({playerName, score});
+
+            cout << "Presiona cualquier tecla para volver al menú principal..." << endl;
+            cin.ignore();
+            cin.get();
+
+            showMenu();
+            return;
+        }
+
+        // Reinicia la posición del jugador en el laberinto para la próxima iteración
+        maze[posY][posX] = ' ';
+    }
+}
+
+void playerAction() {
+    cout << "Controla al jugador usando las teclas WASD (Q para salir): ";
+    cin >> action;
+
+    int prevPosX = posX;
+    int prevPosY = posY;
+
+    switch (action) {
+        case 'a': // Izquierda
+            if (maze[posY][posX - 1] != '#') {
+                posX--;
+            }
+            break;
+        case 'd': // Derecha
+            if (maze[posY][posX + 1] != '#') {
+                posX++;
+            }
+            break;
+        case 'w': // Arriba
+            if (maze[posY - 1][posX] != '#') {
+                posY--;
+            }
+            break;
+        case 's': // Abajo
+            if (maze[posY + 1][posX] != '#') {
+                posY++;
+            }
+            break;
+        case 'q': // Salir
+            exit(0);
+        default:
+            cout << "Acción incorrecta" << endl;
+            break;
+    }
+
+    // Verifica si el jugador pasa sobre un enemigo y suma puntos si es el caso
+    if ((posX == enemy1.x && posY == enemy1.y && enemy1.active) ||
+        (posX == enemy2.x && posY == enemy2.y && enemy2.active) ||
+        (posX == enemy3.x && posY == enemy3.y && enemy3.active)) {
+        score += 250;
+
+        if (posX == enemy1.x && posY == enemy1.y) enemy1.active = false;
+        if (posX == enemy2.x && posY == enemy2.y) enemy2.active = false;
+        if (posX == enemy3.x && posY == enemy3.y) enemy3.active = false;
+    } else {
+        score -= 25;
+    }
+
+    if (score < 0) {
+        score = 0;
+    }
+
+    maze[prevPosY][prevPosX] = ' ';
+}
+
+void showCredits() {
+    system("cls");
+    cout << "===================" << endl;
+    cout << "    Créditos del Juego" << endl;
+    cout << "===================" << endl;
+    cout << "Desarrollado por:" << endl;
+    cout << "1. Steve Cadena" << endl;
+    cout << "2. Tania Saca" << endl;
+    cout << "Presiona cualquier tecla para regresar al menú principal..." << endl;
+    cin.ignore();
+    cin.get();
+}
+
+void showScores() {
+    system("cls");
+    cout << "===================" << endl;
+    cout << "    Puntajes del Juego" << endl;
+    cout << "===================" << endl;
+
+    if (scores.empty()) {
+        cout << "No hay puntajes guardados." << endl;
+    } else {
+        for (size_t i = 0; i < scores.size(); i++) {
+            cout << i + 1 << ". " << scores[i].name << " - " << scores[i].score << " puntos" << endl;
+        }
+    }
+
+    cout << "Presiona cualquier tecla para regresar al menú principal..." << endl;
+    cin.ignore();
+    cin.get();
+}
